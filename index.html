@@ -430,19 +430,21 @@ function sanitizeForSpeech(text){
 }
 function pickMaleViVoice(){
   const voices = window.speechSynthesis.getVoices() || [];
-  // Danh sách tên giọng hay thường gặp
+  // Ưu tiên giọng nam tiếng Việt (Safari/macOS thường có "Minh")
   const preferred = [
-    /Google.*Vietnamese/i,
-    /Microsoft.*(Hieu|Nam).*Vietnam/i,
-    /Microsoft.*(Quang|Long).*Vietnam/i,
-    /(Nam|Minh|Quang|Long).*vi/i,
+    /^Minh$/i,                    // Safari/macOS
+    /Minh.*vi/i,                  // biến thể tên
+    /Microsoft.*(Hieu|Nam|Quang|Long).*Vietnam/i,
+    /Google.*Vietnamese.*Male/i,
+    /(Nam|Minh|Quang|Long|Hieu).*vi/i,
+    /vi-VN.*Male/i,
     /vi-VN/i
   ];
   for(const rx of preferred){
     const v = voices.find(v => rx.test(v.name) || rx.test(v.lang));
     if(v) return v;
   }
-  return voices[0] || null;
+  return voices.find(v => v.lang?.startsWith('vi')) || voices[0] || null;
 }
 function ensureVoice(){
   if(chosenVoice) return chosenVoice;
@@ -458,8 +460,8 @@ function speakSoft(text){
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(sanitizeForSpeech(text));
     u.lang = 'vi-VN';
-    u.pitch = 1.0;  // nam trầm vừa
-    u.rate  = .97;  // nhịp tự nhiên
+    u.pitch = 0.85;  // giọng nam trầm hơn
+    u.rate  = 0.95;   // nhịp chậm hơn cho tự nhiên
     u.volume= 1.0;
     const v = ensureVoice();
     if(v) u.voice = v;
